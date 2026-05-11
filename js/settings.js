@@ -1,4 +1,4 @@
-import { $, toast, icons, openModal, closeModal, showLoading, hideLoading } from './utils.js';
+import { $, $$, toast, icons, openModal, closeModal, showLoading, hideLoading } from './utils.js';
 import { t, setLang, currentLang } from './i18n.js';
 import { getProfile, updateProfile, resetAllData } from './data.js';
 import { handleLogout } from './auth.js';

@@ -1,0 +1,17 @@
+{
+  "name": "Shadow — Financial Tracker",
+  "short_name": "Shadow",
+  "description": "Aplikasi pencatatan keuangan pribadi",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#0D9488",
+  "theme_color": "#0D9488",
+  "icons": [
+    {
+      "src": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 180 180'%3E%3Crect width='180' height='180' rx='36' fill='%230D9488'/%3E%3Ccircle cx='90' cy='85' r='25' fill='none' stroke='white' stroke-width='9'/%3E%3Ccircle cx='90' cy='85' r='8' fill='white'/%3E%3Cpath d='M61 124c0-18 13-32 29-32s29 14 29 32' fill='none' stroke='white' stroke-width='8' stroke-linecap='round'/%3E%3C/svg%3E",
+      "sizes": "180x180",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

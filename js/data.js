@@ -12,7 +12,12 @@ export function getUserId() { return sb.auth.currentUser?.id; }
 export async function initProfile() {
   const uid = getUserId();
   if (!uid) return;
-  const { data } = await sb.from('profiles').select('*').eq('id', uid).single();
+  let { data } = await sb.from('profiles').select('*').eq('id', uid).single();
+  if (!data) {
+    const meta = sb.auth.currentUser?.user_metadata || {};
+    const { data: newData } = await sb.from('profiles').insert({ id: uid, name: meta.name || 'User', email: sb.auth.currentUser?.email || '' }).select().single();
+    data = newData;
+  }
   cachedProfile = data || { id: uid, name: 'User', email: '', phone: '', photo: null, theme: 'light', lang: 'id' };
   const { data: accs } = await sb.from('accounts').select('*').eq('user_id', uid).order('created_at', { ascending: true });
   cachedAccounts = accs || [];

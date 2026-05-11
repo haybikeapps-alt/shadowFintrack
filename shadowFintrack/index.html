@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="id" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+  <meta name="theme-color" content="#0D9488">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="Shadow">
+  <meta name="description" content="Aplikasi pencatatan keuangan pribadi yang simpel dan pribadi">
+  <link rel="manifest" href="manifest.json">
+  <link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 180 180'%3E%3Crect width='180' height='180' rx='36' fill='%230D9488'/%3E%3Ccircle cx='90' cy='85' r='25' fill='none' stroke='white' stroke-width='9'/%3E%3Ccircle cx='90' cy='85' r='8' fill='white'/%3E%3Cpath d='M61 124c0-18 13-32 29-32s29 14 29 32' fill='none' stroke='white' stroke-width='8' stroke-linecap='round'/%3E%3C/svg%3E">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="./css/style.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+  <title>Shadow — Financial Tracker</title>
+</head>
+<body>
+
+  <!-- Loading Overlay -->
+  <div class="loading-overlay" id="loadingOverlay">
+    <div class="loading-spinner"></div>
+  </div>
+
+  <!-- ===== AUTH SCREEN ===== -->
+  <div class="auth-screen" id="authScreen">
+    <div class="auth-card">
+      <div class="auth-logo">
+        <i data-lucide="wallet"></i>
+      </div>
+      <div class="auth-title">Shadow</div>
+      <div class="auth-sub" data-i18n="financial_tracker">financial tracker</div>
+
+      <!-- Login Form -->
+      <div class="auth-form" id="loginForm">
+        <div class="form-group">
+          <label class="form-label">Email</label>
+          <input type="email" class="form-input" id="loginEmail" placeholder="contoh@email.com" autocomplete="email">
+        </div>
+        <div class="form-group">
+          <label class="form-label" data-i18n="password">Password</label>
+          <input type="password" class="form-input" id="loginPassword" placeholder="••••••••" autocomplete="current-password">
+        </div>
+        <button class="form-btn form-btn-primary" id="loginBtn" data-i18n="login">Masuk</button>
+        <div class="auth-switch" data-i18n="no_account">Belum punya akun? <span id="showSignup">Daftar</span></div>
+      </div>
+
+      <!-- Signup Form -->
+      <div class="auth-form" id="signupForm" style="display:none">
+        <div class="form-group">
+          <label class="form-label" data-i18n="name">Nama</label>
+          <input type="text" class="form-input" id="signupName" placeholder="Nama lengkap" autocomplete="name">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Email</label>
+          <input type="email" class="form-input" id="signupEmail" placeholder="contoh@email.com" autocomplete="email">
+        </div>
+        <div class="form-group">
+          <label class="form-label" data-i18n="password">Password</label>
+          <input type="password" class="form-input" id="signupPassword" placeholder="Min. 6 karakter" autocomplete="new-password">
+        </div>
+        <button class="form-btn form-btn-primary" id="signupBtn" data-i18n="register">Daftar</button>
+        <div class="auth-switch" data-i18n="has_account">Sudah punya akun? <span id="showLogin">Masuk</span></div>
+      </div>
+
+      <div class="auth-error" id="authError" style="display:none"></div>
+    </div>
+  </div>
+
+  <!-- ===== MAIN APP ===== -->
+  <div class="app-wrap" id="appWrap" style="display:none">
+
+    <!-- Header -->
+    <header class="header" id="header">
+      <button class="logo-btn" id="logoBtn" aria-label="Buka menu"><i data-lucide="wallet" style="width:20px;height:20px;color:var(--accent)"></i></button>
+      <div class="hdr-tg">
+        <div class="hdr-title">Shadow</div>
+        <div class="hdr-sub" data-i18n="financial_tracker">financial tracker</div>
+      </div>
+      <div class="hdr-actions">
+        <button class="install-btn" id="installBtn" aria-label="Install"><i data-lucide="download"></i><span data-i18n="install">Install</span></button>
+      </div>
+    </header>
+
+    <div class="off-banner" id="offBanner" data-i18n="offline_msg">Kamu sedang offline</div>
+    <div class="sb-overlay" id="sbOverlay"></div>
+
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar">
+      <div class="sb-hdr">
+        <div class="sb-brand">
+          <div class="sb-logo" id="sbLogoWrap"><i data-lucide="wallet" style="width:17px;height:17px;color:var(--accent)"></i></div>
+          <span class="sb-name">Shadow</span>
+        </div>
+        <button class="sb-close" id="sbClose" aria-label="Tutup menu"><i data-lucide="x"></i></button>
+      </div>
+      <nav class="sb-nav" id="sbMenu">
+        <div class="sb-label" data-i18n="menu">Menu</div>
+        <button class="sb-item" data-sb="profile"><i data-lucide="user-circle"></i><span data-i18n="profile">Profile</span></button>
+        <button class="sb-item" data-sb="coa"><i data-lucide="bar-chart-3"></i><span data-i18n="chart_of_account">Chart of Account</span></button>
+        <button class="sb-item" data-sb="setting"><i data-lucide="settings"></i><span data-i18n="setting">Setting</span></button>
+        <button class="sb-item" data-sb="about"><i data-lucide="info"></i><span data-i18n="about">Tentang</span></button>
+      </nav>
+
+      <!-- SB: Profile -->
+      <div class="sb-nav sb-page" id="sb-profile">
+        <button class="sb-back" data-back><i data-lucide="arrow-left"></i> <span data-i18n="back_to_sidebar">Kembali</span></button>
+        <div class="sb-page-title" data-i18n="profile">Profile</div>
+        <div class="profile-photo-wrap">
+          <div class="profile-photo" id="profilePhotoBtn"><i data-lucide="user" id="profilePhotoIcon"></i><img id="profilePhotoImg" src="" alt="" style="display:none"><div class="profile-photo-badge"><i data-lucide="camera"></i></div></div>
+          <div class="profile-photo-hint" data-i18n="tap_to_change_photo">Ketuk untuk ganti foto</div>
+          <input type="file" accept="image/*" class="hidden-input" id="photoInput">
+        </div>
+        <div class="form-group"><label class="form-label" data-i18n="name">Nama</label><input type="text" class="form-input" id="profileName" placeholder="Nama"></div>
+        <div class="form-group"><label class="form-label">Email</label><input type="email" class="form-input" id="profileEmail" placeholder="email"></div>
+        <div class="form-group"><label class="form-label" data-i18n="phone">Telepon</label><input type="tel" class="form-input" id="profilePhone" placeholder="08xxx"></div>
+        <button class="form-btn form-btn-primary" id="profileSaveBtn" data-i18n="save_changes">Simpan Perubahan</button>
+      </div>
+
+      <!-- SB: COA -->
+      <div class="sb-nav sb-page" id="sb-coa">
+        <button class="sb-back" data-back><i data-lucide="arrow-left"></i> <span data-i18n="back_to_sidebar">Kembali</span></button>
+        <div class="sb-page-title" data-i18n="account_list">Daftar Akun</div>
+        <div class="coa-list" id="coaList"></div>
+        <button class="form-btn form-btn-primary" id="coaAddBtn"><span style="display:flex;align-items:center;justify-content:center;gap:6px"><i data-lucide="plus" style="width:16px;height:16px"></i> <span data-i18n="add_new_account">Tambah Akun</span></span></button>
+      </div>
+
+      <!-- SB: Setting -->
+      <div class="sb-nav sb-page" id="sb-setting">
+        <button class="sb-back" data-back><i data-lucide="arrow-left"></i> <span data-i18n="back_to_sidebar">Kembali</span></button>
+        <div class="sb-page-title" data-i18n="setting">Setting</div>
+        <div class="toggle-row">
+          <div class="toggle-info"><div class="toggle-title" data-i18n="theme">Tema</div><div class="toggle-desc" data-i18n="theme_desc">Ganti tampilan terang atau gelap</div></div>
+          <div class="toggle-switch" id="themeToggle" role="switch" aria-label="Toggle dark mode"></div>
+        </div>
+        <div class="lang-row">
+          <div class="toggle-info"><div class="toggle-title" data-i18n="language">Bahasa</div><div class="toggle-desc" data-i18n="language_desc">Pilih bahasa tampilan</div></div>
+          <div class="lang-btns"><button class="lang-btn active" data-lang="id">ID</button><button class="lang-btn" data-lang="en">EN</button></div>
+        </div>
+        <div class="toggle-row" style="border:none">
+          <div class="toggle-info"><div class="toggle-title" data-i18n="import_data">Import Data CSV</div><div class="toggle-desc" data-i18n="import_desc">Import data keuangan dari file CSV</div></div>
+          <button class="form-btn form-btn-outline" id="importBtn" style="width:auto;padding:8px 16px;font-size:.75rem"><i data-lucide="upload" style="width:14px;height:14px"></i></button>
+        </div>
+        <input type="file" accept=".csv" class="hidden-input" id="csvInput">
+        <div style="margin-top:20px"><button class="form-btn form-btn-danger" id="resetBtn"><span style="display:flex;align-items:center;justify-content:center;gap:8px"><i data-lucide="rotate-ccw" style="width:16px;height:16px"></i> <span data-i18n="reset_app">Reset Aplikasi</span></span></button><div style="font-size:.66rem;color:var(--muted);text-align:center;margin-top:8px" data-i18n="reset_desc">Menghapus semua data</div></div>
+      </div>
+
+      <!-- SB: About -->
+      <div class="sb-nav sb-page" id="sb-about">
+        <button class="sb-back" data-back><i data-lucide="arrow-left"></i> <span data-i18n="back_to_sidebar">Kembali</span></button>
+        <div class="about-card">
+          <div class="about-logo" id="aboutLogo"><i data-lucide="wallet" style="width:26px;height:26px;color:var(--accent)"></i></div>
+          <div class="about-name">Shadow</div>
+          <div class="about-ver">v2.0.0</div>
+          <div class="about-desc" id="aboutDesc"></div>
+          <ul class="about-features">
+            <li><div class="about-feat-icon"><i data-lucide="receipt"></i></div><span data-i18n="about_f1">Mencatat pemasukan dan pengeluaran</span></li>
+            <li><div class="about-feat-icon"><i data-lucide="wallet"></i></div><span data-i18n="about_f2">Mengelola berbagai akun keuangan</span></li>
+            <li><div class="about-feat-icon"><i data-lucide="heart-pulse"></i></div><span data-i18n="about_f3">Memantau kesehatan keuangan</span></li>
+            <li><div class="about-feat-icon"><i data-lucide="lightbulb"></i></div><span data-i18n="about_f4">Saran keuangan yang dipersonalisasi</span></li>
+            <li><div class="about-feat-icon"><i data-lucide="lock"></i></div><span data-i18n="about_f5">Data keuangan pribadi terenkripsi</span></li>
+            <li><div class="about-feat-icon"><i data-lucide="upload"></i></div><span data-i18n="about_f6">Import data dari file CSV</span></li>
+          </ul>
+          <a href="https://trakteer.id/shadowapps/tip" target="_blank" rel="noopener noreferrer" class="trakteer-btn">
+            <i data-lucide="heart" style="width:16px;height:16px"></i>
+            <span data-i18n="support_dev">Dukung Developer</span>
+          </a>
+          <div class="about-footer"><span data-i18n="about_footer">Dibuat dengan</span> <span style="color:var(--red)">❤</span></div>
+        </div>
+      </div>
+
+      <div class="logout-area"><button class="logout-btn" id="logoutBtn"><i data-lucide="log-out"></i><span data-i18n="logout">Logout</span></button></div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main">
+
+      <!-- Dashboard -->
+      <section class="pg active" id="pg-dashboard">
+        <div class="greet-lbl" id="greetTime">Selamat Pagi</div>
+        <h1 class="greet-name"><span id="greetHello">Hallo</span>, <span id="dashUserName">User</span></h1>
+        <div class="saldo dc" data-delay="0">
+          <div class="saldo-lbl" data-i18n="total_saldo">Total Saldo</div>
+          <div class="saldo-val auto-fit" id="dashTotalSaldo">Rp 0</div>
+          <div class="saldo-time"><i data-lucide="clock" style="width:12px;height:12px;color:var(--muted)"></i><span id="dashTime"></span></div>
+        </div>
+        <div class="w-grid dc" data-delay="60" id="walletGrid"></div>
+        <div class="cmp dc" data-delay="120">
+          <div class="cmp-hdr"><span class="cmp-title" data-i18n="today">Hari Ini</span><span class="cmp-net pos" id="dashTodayNet">+Rp 0</span></div>
+          <div class="cmp-row"><div class="cmp-info"><span class="cmp-dot g"></span><span data-i18n="income">Pemasukan</span><span class="cmp-val g auto-fit" id="dashTodayInc">Rp 0</span></div><div class="bar-t"><div class="bar-f g" id="dashTodayIncBar"></div></div></div>
+          <div class="cmp-row"><div class="cmp-info"><span class="cmp-dot r"></span><span data-i18n="expense">Pengeluaran</span><span class="cmp-val r auto-fit" id="dashTodayExp">Rp 0</span></div><div class="bar-t"><div class="bar-f r" id="dashTodayExpBar"></div></div></div>
+        </div>
+        <div class="cmp dc" data-delay="180">
+          <div class="cmp-hdr"><span class="cmp-title" data-i18n="this_month">Bulan Ini</span><span class="cmp-net pos" id="dashMonthNet">+Rp 0</span></div>
+          <div class="cmp-row"><div class="cmp-info"><span class="cmp-dot g"></span><span data-i18n="income">Pemasukan</span><span class="cmp-val g auto-fit" id="dashMonthInc">Rp 0</span></div><div class="bar-t"><div class="bar-f g" id="dashMonthIncBar"></div></div></div>
+          <div class="cmp-row"><div class="cmp-info"><span class="cmp-dot r"></span><span data-i18n="expense">Pengeluaran</span><span class="cmp-val r auto-fit" id="dashMonthExp">Rp 0</span></div><div class="bar-t"><div class="bar-f r" id="dashMonthExpBar"></div></div></div>
+        </div>
+        <div class="badge-grid dc" data-delay="240" id="dashBadges"></div>
+        <div class="health dc" data-delay="300">
+          <div class="health-hdr"><div class="health-title"><i data-lucide="heart-pulse"></i><span data-i18n="financial_health">Kesehatan Keuangan</span></div><span class="health-period" data-i18n="this_month">Bulan Ini</span></div>
+          <div class="health-body">
+            <div class="gauge-wrap"><svg class="gauge-svg" viewBox="0 0 120 68" width="120" height="68"><path class="gauge-bg" d="M 10 62 A 50 50 0 0 1 110 62"/><path class="gauge-fill" id="gaugeFill" d="M 10 62 A 50 50 0 0 1 110 62" stroke="var(--accent)" stroke-dasharray="157" stroke-dashoffset="157"/></svg><div class="gauge-score"><div class="gauge-num" id="gaugeNum" style="color:var(--accent)">0</div><div class="gauge-max">/ 100</div></div></div>
+            <div class="health-info"><div class="health-status" id="healthStatus" style="color:var(--accent)">-</div><div class="health-desc" id="healthDesc"></div><div class="health-metrics" id="healthMetrics"></div></div>
+          </div>
+        </div>
+        <div class="saran dc" data-delay="360">
+          <div class="saran-hdr"><i data-lucide="lightbulb"></i><span class="saran-title" data-i18n="best_advice">Saran Terbaik</span></div>
+          <ul class="saran-list" id="saranList"></ul>
+        </div>
+      </section>
+
+      <!-- Mutasi -->
+      <section class="pg" id="pg-mutasi">
+        <div class="sec-hdr"><h2 class="sec-t" data-i18n="balance_mutation">Mutasi Saldo</h2><button class="sec-link" id="mutasiOpenBtn" style="background:var(--accent);color:#fff;padding:7px 14px;border-radius:20px;font-size:.72rem" data-i18n="create_mutation">Buat Mutasi</button></div>
+        <div id="mutasiHistory"></div>
+      </section>
+
+      <!-- Tambah -->
+      <section class="pg" id="pg-tambah">
+        <div class="sec-hdr"><h2 class="sec-t" data-i18n="add_activity">Tambah Transaksi</h2></div>
+        <div class="act-toggle">
+          <button class="act-toggle-btn" id="actIncBtn"><i data-lucide="trending-up"></i><span data-i18n="income">Pemasukan</span></button>
+          <button class="act-toggle-btn" id="actExpBtn"><i data-lucide="trending-down"></i><span data-i18n="expense">Pengeluaran</span></button>
+        </div>
+        <div id="actHistory"></div>
+        <div id="actForm"></div>
+      </section>
+
+      <!-- Tagihan -->
+      <section class="pg" id="pg-tagihan">
+        <div class="sec-hdr"><h2 class="sec-t" data-i18n="bill">Tagihan</h2></div>
+        <div class="tag-toggle">
+          <button class="tag-toggle-btn" id="tagDebtBtn"><i data-lucide="alert-circle"></i><span data-i18n="debt">Hutang</span></button>
+          <button class="tag-toggle-btn" id="tagRecvBtn"><i data-lucide="hand-coins"></i><span data-i18n="receivable">Piutang</span></button>
+        </div>
+        <div id="tagList"></div>
+        <div id="tagForm"></div>
+      </section>
+
+      <!-- Riwayat -->
+      <section class="pg" id="pg-riwayat">
+        <div class="sec-hdr"><h2 class="sec-t" data-i18n="history">Riwayat</h2></div>
+        <div id="historyContainer"></div>
+      </section>
+    </main>
+
+    <!-- Bottom Nav -->
+    <nav class="bnav">
+      <button class="ni active" data-pg="dashboard"><div class="ni-w"><i data-lucide="layout-dashboard"></i></div><span class="ni-l" data-i18n="dashboard">Dashboard</span></button>
+      <button class="ni" data-pg="mutasi"><div class="ni-w"><i data-lucide="arrow-left-right"></i></div><span class="ni-l" data-i18n="balance_mutation">Mutasi</span></button>
+      <button class="ni ni--add" data-pg="tambah"><div class="ni-w"><i data-lucide="plus"></i></div><span class="ni-l" data-i18n="add">Tambah</span></button>
+      <button class="ni" data-pg="tagihan"><div class="ni-w"><i data-lucide="file-text"></i></div><span class="ni-l" data-i18n="bill">Tagihan</span></button>
+      <button class="ni" data-pg="riwayat"><div class="ni-w"><i data-lucide="history"></i></div><span class="ni-l" data-i18n="history">Riwayat</span></button>
+    </nav>
+  </div>
+
+  <!-- ===== MODALS ===== -->
+
+  <!-- Add Account -->
+  <div class="modal-overlay" id="addAccountModal">
+    <div class="modal"><div class="modal-handle"></div><div class="modal-title" data-i18n="add_new_account">Tambah Akun</div>
+    <div class="form-group"><label class="form-label" data-i18n="account_name">Nama Akun</label><input type="text" class="form-input" id="newAccName" placeholder="BCA, GoPay"></div>
+    <div class="form-group"><label class="form-label" data-i18n="account_type">Jenis Akun</label><select class="form-input" id="newAccType"><option value="" data-i18n="choose_type">Pilih jenis</option><option value="Cash">Cash</option><option value="Bank">Bank</option><option value="E-Wallet">E-Wallet</option><option value="Crypto">Crypto</option><option value="Asuransi">Asuransi</option></select></div>
+    <div class="form-group"><label class="form-label" data-i18n="amount_rp">Nominal (Rp)</label><input type="text" inputmode="numeric" class="form-input" id="newAccBalance" placeholder="0" data-fmt-rp></div>
+    <div class="modal-btns"><button class="form-btn form-btn-outline" data-close-modal="addAccountModal" data-i18n="cancel">Batal</button><button class="form-btn form-btn-primary" id="addAccPost" data-i18n="posting">Posting</button></div></div>
+  </div>
+
+  <!-- Edit Account -->
+  <div class="modal-overlay" id="editAccountModal">
+    <div class="modal"><div class="modal-handle"></div><div class="modal-title" id="editAccTitle">Edit Akun</div>
+    <div class="form-group"><label class="form-label" data-i18n="amount_rp">Nominal (Rp)</label><input type="text" inputmode="numeric" class="form-input" id="editAccBalance" placeholder="0" data-fmt-rp></div>
+    <div class="modal-btns"><button class="form-btn form-btn-outline" data-close-modal="editAccountModal" data-i18n="cancel">Batal</button><button class="form-btn form-btn-primary" id="editAccSave" data-i18n="save">Simpan</button></div></div>
+  </div>
+
+  <!-- Mutasi -->
+  <div class="modal-overlay" id="mutasiModal">
+    <div class="modal"><div class="modal-handle"></div><div class="modal-title" data-i18n="do_mutation">Lakukan Mutasi</div>
+    <div class="form-group"><label class="form-label" data-i18n="date">Tanggal</label><input type="date" class="form-input" id="mutasiDate"></div>
+    <div class="form-group"><label class="form-label" data-i18n="from_account">Dari Akun</label><select class="form-input" id="mutasiFrom"></select></div>
+    <div class="form-group"><label class="form-label" data-i18n="to_account">Ke Akun</label><select class="form-input" id="mutasiTo"></select></div>
+    <div class="form-group"><label class="form-label" data-i18n="amount_rp">Nominal (Rp)</label><input type="text" inputmode="numeric" class="form-input" id="mutasiAmount" placeholder="0" data-fmt-rp></div>
+    <div class="modal-btns"><button class="form-btn form-btn-outline" data-close-modal="mutasiModal" data-i18n="cancel">Batal</button><button class="form-btn form-btn-primary" id="mutasiPost" data-i18n="posting">Posting</button></div></div>
+  </div>
+
+  <!-- Confirm -->
+  <div class="modal-overlay" id="confirmModal">
+    <div class="modal" style="padding:28px 20px 22px"><div class="modal-handle"></div><div class="confirm-msg" id="confirmMsg">Apakah data sudah benar?</div><div class="modal-btns"><button class="form-btn form-btn-outline" data-close-modal="confirmModal" data-i18n="edit_again">Edit Ulang</button><button class="form-btn form-btn-primary" id="confirmYes" data-i18n="correct">Benar</button></div></div>
+  </div>
+
+  <!-- Tag Confirm -->
+  <div class="modal-overlay" id="tagConfirmModal">
+    <div class="modal" style="padding:28px 20px 22px"><div class="modal-handle"></div><div class="confirm-msg" id="tagConfirmMsg"></div><div id="tagConfirmExtra"></div><div class="modal-btns"><button class="form-btn form-btn-outline" data-close-modal="tagConfirmModal" data-i18n="cancel">Batal</button><button class="form-btn form-btn-primary" id="tagConfirmYes">OK</button></div></div>
+  </div>
+
+  <!-- Tag Pay -->
+  <div class="modal-overlay" id="tagPayModal">
+    <div class="modal"><div class="modal-handle"></div><div class="modal-title" id="tagPayTitle">Bayar</div>
+    <div id="tagPayExtra"></div>
+    <div class="form-group"><label class="form-label" data-i18n="amount_rp">Nominal (Rp)</label><input type="text" inputmode="numeric" class="form-input" id="tagPayAmount" placeholder="0" data-fmt-rp></div>
+    <div class="modal-btns"><button class="form-btn form-btn-outline" data-close-modal="tagPayModal" data-i18n="cancel">Batal</button><button class="form-btn form-btn-primary" id="tagPayYes" data-i18n="pay">Bayar</button></div></div>
+  </div>
+
+  <!-- Tag Image -->
+  <div class="modal-overlay" id="tagImgModal">
+    <div class="modal" style="padding:20px"><div class="modal-handle"></div><img id="tagImgView" src="" alt="Bukti" class="tag-img-view"><button class="form-btn form-btn-outline" style="margin-top:14px" data-close-modal="tagImgModal" data-i18n="close">Tutup</button></div>
+  </div>
+
+  <!-- Reset -->
+  <div class="modal-overlay" id="resetModal">
+    <div class="modal" style="padding:28px 20px 22px"><div class="modal-handle"></div>
+    <div style="text-align:center;margin-bottom:8px"><div style="width:48px;height:48px;border-radius:50%;background:var(--red-l);display:inline-flex;align-items:center;justify-content:center;margin-bottom:12px"><i data-lucide="alert-triangle" style="width:24px;height:24px;color:var(--red)"></i></div></div>
+    <div class="confirm-msg" data-i18n="reset_confirm">Yakin ingin mereset semua data?</div>
+    <div class="modal-btns"><button class="form-btn form-btn-outline" data-close-modal="resetModal" data-i18n="cancel">Batal</button><button class="form-btn form-btn-danger" id="resetYes" data-i18n="reset">Reset</button></div></div>
+  </div>
+
+  <!-- Import Preview -->
+  <div class="modal-overlay" id="importModal">
+    <div class="modal"><div class="modal-handle"></div><div class="modal-title" data-i18n="import_preview">Preview Import</div>
+    <div id="importPreviewContent" style="max-height:300px;overflow-y:auto;margin-bottom:14px;font-size:.78rem"></div>
+    <div id="importSummary" style="font-size:.8rem;font-weight:600;margin-bottom:14px"></div>
+    <div class="modal-btns"><button class="form-btn form-btn-outline" data-close-modal="importModal" data-i18n="cancel">Batal</button><button class="form-btn form-btn-primary" id="importDoBtn" data-i18n="posting">Import</button></div></div>
+  </div>
+
+  <!-- Toast -->
+  <div class="toast-c"><div class="toast" id="toast"></div></div>
+
+  <script type="module" src="./js/app.js"></script>
+</body>
+</html>

@@ -67,10 +67,14 @@ async function handleSignup() {
   if (!email || !pass) { showAuthError(t('name_required')); return; }
   if (pass.length < 6) { showAuthError('Password minimal 6 karakter'); return; }
   showLoading();
-  const { error } = await sb.auth.signUp({ email, password: pass, options: { data: { name } } });
+  const { data, error } = await sb.auth.signUp({ email, password: pass, options: { data: { name } } });
   hideLoading();
   if (error) { showAuthError(error.message); return; }
-  toast('Berhasil daftar! Silakan login.');
+  if (data.session) {
+    toast('Berhasil daftar!');
+  } else {
+    toast('Berhasil daftar! Silakan login.');
+  }
   $('#signupForm').style.display = 'none';
   $('#loginForm').style.display = '';
   $('#loginEmail').value = email;

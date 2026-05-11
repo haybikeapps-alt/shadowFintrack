@@ -13,7 +13,6 @@ export function syncSettingUI() {
 }
 
 export function initSettings() {
-  // Theme
   $('#themeToggle').addEventListener('click', async () => {
     const p = getProfile();
     const next = p.theme === 'dark' ? 'light' : 'dark';
@@ -23,14 +22,12 @@ export function initSettings() {
     await updateProfile({ theme: next });
   });
 
-  // Language
   $$('.lang-btn').forEach(b => b.addEventListener('click', async () => {
     const lang = b.dataset.lang;
     setLang(lang);
     await updateProfile({ lang });
   }));
 
-  // Import CSV
   $('#importBtn').addEventListener('click', () => $('#csvInput').click());
   $('#csvInput').addEventListener('change', e => {
     const file = e.target.files[0];
@@ -40,7 +37,6 @@ export function initSettings() {
       const text = ev.target.result;
       const lines = text.trim().split('\n');
       if (lines.length < 2) { toast(t('csv_invalid_format')); return; }
-
       const rows = [];
       for (let i = 1; i < lines.length; i++) {
         const parts = lines[i].split(',').map(s => s.trim().replace(/^"|"$/g, ''));
@@ -53,17 +49,14 @@ export function initSettings() {
         if (!amount || amount <= 0) continue;
         rows.push({ type, date, category_id: parts[2] || 'lainnya', category_name: parts[2] || 'Lainnya', account_name: parts[3] || '', amount, note: parts[5] || null });
       }
-
       if (!rows.length) { toast(t('csv_invalid_format')); return; }
-
       const preview = rows.slice(0, 5).map(r =>
-        `<div style="padding:6px 0;border-bottom:1px solid var(--border)"><span style="color:${r.type === 'income' ? 'var(--green)' : 'var(--red)'};font-weight:600">${r.type === 'income' ? '+' : '-'}${r.amount.toLocaleString('id-ID')}</span> · ${r.category_name} · ${r.date}${r.note ? ' · ' + r.note : ''}</div>`
+        '<div style="padding:6px 0;border-bottom:1px solid var(--border)"><span style="color:' + (r.type === 'income' ? 'var(--green)' : 'var(--red)') + ';font-weight:600">' + (r.type === 'income' ? '+' : '-') + r.amount.toLocaleString('id-ID') + '</span> · ' + r.category_name + ' · ' + r.date + '</div>'
       ).join('');
       $('#importPreviewContent').innerHTML = preview;
-      $('#importSummary').textContent = `${rows.length} ${t('csv_preview_rows')} — ${t('csv_format')}`;
+      $('#importSummary').textContent = rows.length + ' ' + t('csv_preview_rows') + ' — ' + t('csv_format');
       openModal('importModal');
       icons();
-
       window._importRows = rows;
     };
     reader.readAsText(file);
@@ -82,7 +75,6 @@ export function initSettings() {
     window._importRows = null;
   });
 
-  // Reset
   $('#resetBtn').addEventListener('click', () => openModal('resetModal'));
   $('#resetYes').addEventListener('click', async () => {
     closeModal('resetModal');
@@ -93,7 +85,6 @@ export function initSettings() {
     renderDashboard();
   });
 
-  // Logout
   $('#logoutBtn').addEventListener('click', async () => {
     await handleLogout();
   });

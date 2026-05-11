@@ -107,7 +107,7 @@ function renderTagForm() {
       const name = $('#tdName').value.trim();
       const paid = parseInt($('#tdPaid').value) || 0;
       const tenor = parseInt($('#tdTenor').value) || 0;
-      const inst = parseRpInput($('#tdInstall');
+      const inst = parseRpInput($('#tdInstall'));
       const due = $('#tdDue').value;
       if (!name) { toast(t('name_required')); return; }
       if (tenor < 1) { toast(t('tenor_required')); return; }
